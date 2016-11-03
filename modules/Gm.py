@@ -6,6 +6,11 @@ import modules.Util as Util
 from modules.Grid import GridPoint as GridPoint
 from modules.Plrs import Plr as Plr
 from modules.Blot import Blot as Blot
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.button import Button
+from kivy.app import App
+from kivy.config import Config
+
 
 class Gm:
 
@@ -26,12 +31,19 @@ class Gm:
 
         self.totalPos = 0
 
+        self.GmApp = GmApp()
+
+        Config.set('graphics', 'width', (cfg.GRID_SIZE * cfg.BLOCK_SIZE))
+        Config.set('graphics', 'height', (cfg.GRID_SIZE * cfg.BLOCK_SIZE))
+
     def go(self):
 
         done = 0
         counter = 1
 
         print('Begin')
+
+        self.GmApp.run()
 
         while not done:
             time.sleep(cfg.SLEEP_TIME)
@@ -41,7 +53,7 @@ class Gm:
             self.UpdateBlots()
             self.CheckForHits()
 
-            if(cfg.PRINTING):
+            if cfg.PRINTING:
                 Util.PrintGrid(self.grid)
 
             done = self.GmDone()
@@ -152,3 +164,20 @@ class Gm:
                    return 0
 
         return done
+
+
+class GmApp(App):
+    def build(self):
+        layout = GridLayout(cols=cfg.GRID_SIZE, row_force_default=True, row_default_height=cfg.BLOCK_SIZE)
+
+        height = cfg.GRID_SIZE - 1
+
+        while height >= 0:
+            width = 0
+            while width < cfg.GRID_SIZE:
+                layout.add_widget(Button(text='%d,%d' % (width, height), size_hint_x=None, width=cfg.BLOCK_SIZE, font_size=6))
+                width += 1
+
+            height -= 1
+
+        return layout

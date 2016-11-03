@@ -1,12 +1,13 @@
 import sys
-import time
 import datetime
 import logging
 from modules.Gm import Gm
+from kivy.app import App
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.button import Button
 
 # Create the logger
 logger = logging.getLogger('driver')
-
 
 def initialize():
 
