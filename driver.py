@@ -1,10 +1,8 @@
 import sys
 import datetime
 import logging
+#from modules.GmApp import GmApp
 from modules.Gm import Gm
-from kivy.app import App
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.button import Button
 
 # Create the logger
 logger = logging.getLogger('driver')
@@ -41,6 +39,8 @@ def main():
 
     gm = Gm()
     gm.go()
+#    gmApp = GmApp()
+#    gmApp.run()
 
     logger.info('### Ending Driver Execution - %s ###' % datetime.datetime.now().strftime('%y-%m-%d %H:%M:%S'))
 
