@@ -16,15 +16,17 @@ class Plr:
 
         info = self.PrintPlr()
         self.logger.info('# Initializing plr: %s' % info)
-        
+
     def getButton(self):
         button = Button(
             text='%s' % (self.num),
-            width = cfg.BLOCK_SIZE,
-            height = cfg.BLOCK_SIZE,
+            size_hint = ((1 / cfg.GRID_SIZE), (1 / cfg.GRID_SIZE)),
+            # width = cfg.BLOCK_SIZE,
+            # height = cfg.BLOCK_SIZE,
+            background_color=[3,2,1,3],
             font_size = 9,
             pos = (self.x * cfg.BLOCK_SIZE, self.y * cfg.BLOCK_SIZE))
-            
+
         return button
 
     def PrintPlr(self):
