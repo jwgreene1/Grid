@@ -1,17 +1,16 @@
 from __future__ import division
-import time
 import logging
 import modules.Config as cfg
 import modules.Util as Util
 from modules.Grid import GridPoint as GridPoint
 from modules.Plrs import Plr as Plr
 from modules.Blot import Blot as Blot
-#from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.button import Button
 from kivy.app import App
 from kivy.config import Config
 from kivy.clock import Clock
+from kivy.graphics import Line
 
 
 class Gm:
@@ -40,7 +39,7 @@ class Gm:
 
 
 class GmApp(App):
-    #kivy's run call build.
+    #kivy's run calls build.
     def build(self):
 
         self.initialize()
@@ -56,9 +55,10 @@ class GmApp(App):
                 button = Button(
                     text='%d,%d' % (width, height),
                     font_size=6,
-                    size_hint = ((1 / cfg.GRID_SIZE), (1 / cfg.GRID_SIZE)),
-                    pos = ((width * cfg.BLOCK_SIZE), (height * cfg.BLOCK_SIZE + (2 * cfg.BLOCK_SIZE))),
-                    background_color=[0,1,0,1])
+                    size_hint=((1 / cfg.GRID_SIZE), (1 / cfg.GRID_SIZE)),
+                    pos=((width * cfg.BLOCK_SIZE), (height * cfg.BLOCK_SIZE + (2 * cfg.BLOCK_SIZE))),
+                    # pos=((width * (1 / cfg.GRID_SIZE)), (height * (1 / cfg.GRID_SIZE) + (2 * (1 / cfg.GRID_SIZE)))),
+                    background_color=[0, 1, 0, 1])
 
                 self.layout.add_widget(button, 10)
 
@@ -70,9 +70,9 @@ class GmApp(App):
         play_button = Button(
             text='ply',
             font_size=6,
-            size_hint = (((1 / cfg.GRID_SIZE) * 8), ((1 / cfg.GRID_SIZE) * 1.5)),
+            size_hint=(((1 / cfg.GRID_SIZE) * 8), ((1 / cfg.GRID_SIZE) * 1.5)),
             pos_hint={'center_x': .5, 'y': .0},
-            background_color=[1,0,0,1])
+            background_color=[1, 0, 0, 1])
 
         play_button.bind(on_press=self.callback)
         self.layout.add_widget(play_button)
@@ -81,21 +81,18 @@ class GmApp(App):
 
     def callback(self, instance):
         print('The <%s> button was pressed' % instance.text)
-        if(instance.text is 'ply'):
-            Clock.schedule_interval(self.ply, 0.5)
-            # self.ply()
+        if instance.text is 'ply':
+            Clock.schedule_interval(self.ply, cfg.SLEEP_TIME)
 
-    def UpdateGrid(self, x, y, button):
-        # self.layout.remove_widget(self.gmGrid[x][y].button)
-        self.gmGrid[x][y].button = button
+    def AddWidget(self, widget):
 
-        self.layout.add_widget(button, 0)
-
-        # This runs but doesn't change anything
-#        self.layout._trigger_layout()
-        # Same here
+        self.layout.add_widget(widget, 0)
         self.layout.do_layout()
-        return self.layout
+
+    def RemoveWidget(self, widget):
+
+        self.layout.remove_widget(widget)
+        self.layout.do_layout()
 
     def ply(self, whoAmI):
         print(whoAmI)
@@ -104,47 +101,44 @@ class GmApp(App):
 
         print('Begin ply')
 
-        # while not done:
-            # time.sleep(cfg.SLEEP_TIME)
-        print('\nTIME: %d' % counter)
+        # print('\nTIME: %d' % counter)
         counter += 1
         self.AdvancePlrs()
 
-        #    self.UpdateBlots()
+        if self.GmDone():
+            Clock.unschedule(self.ply)
+
+        self.UpdateBlots()
 #            self.CheckForHits()
-
-#            if cfg.PRINTING:
-#                Util.PrintGrid(self.grid)
-
-        # done = self.GmDone()
 
     def AdvancePlrs(self):
 
         for plr in self.plrs:
 
             # Do nothing if done or hit
-            if(plr.status == cfg.PLR_DONE or plr.status == cfg.PLR_HIT):
+            if plr.status == cfg.PLR_DONE or plr.status == cfg.PLR_HIT:
                 continue
 
-            # If on the grid, replace the current space with empty
-            # if(plr.status == cfg.PLR_GOING):
-                # print(plr.x, plr.y, plr.getButton())
-                # self.UpdateGrid(plr.x, plr.y, plr.getButton())
+            # Remove the current player button
+            if plr.status == cfg.PLR_GOING:
+                self.RemoveWidget(plr.getButton())
 
             # Advance
             plr.x += 1
             plr.y += 1
 
             # Test for done
-            if(plr.x == cfg.GRID_SIZE):
+            if plr.x == cfg.GRID_SIZE:
                 plr.status = cfg.PLR_DONE
                 self.plrsMadeIt += 1
 
-            elif(plr.x == 0):
+            elif plr.x == 0 :
                 plr.status = cfg.PLR_GOING
 
-            if(plr.status == cfg.PLR_GOING):
-                self.UpdateGrid(plr.x, plr.y, plr.getButton())
+            if plr.status == cfg.PLR_GOING:
+                # Update the players button then the grid
+                plr.setButton()
+                self.AddWidget(plr.getButton())
 
     def initialize(self):
         self.logger = logging.getLogger('driver.modules.Gm.GmApp')
@@ -157,7 +151,7 @@ class GmApp(App):
         self.logger.info('Initializing Plrs')
         self.plrs = [Plr(_) for _ in range(0, cfg.PLR_NUM)]
 
-        self.blots = [None for _ in range(0, cfg.BLOT_NUM)]
+        self.blots = [Blot() for _ in range(0, cfg.BLOT_NUM)]
         self.blotCounter = 0
 
         self.plrsMadeIt = 0
@@ -197,7 +191,7 @@ class GmApp(App):
                         distance = Util.Distance(plr, blot)
                         if(distance < blot.size):
                             plr.status = cfg.PLR_HIT
-                            self.UpdateGrid(plr.x, plr.y, cfg.EMPTY_POINT)
+                            self.AddWidget(plr.x, plr.y, cfg.EMPTY_POINT)
                             self.plrsHit += 1
                             print('Distance  : %s' % distance)
                             print('Player Hit: %s' % plr.PrintPlr())
@@ -205,27 +199,35 @@ class GmApp(App):
                             continue
 
     def UpdateBlots(self):
+
         # Get the new blot index
         newBlotIndex = self.blotCounter % cfg.BLOT_NUM
+
         # Get the old blot at that index
         oldBlot = self.blots[newBlotIndex]
-        # If the blot is defined, put an empty point char in it's place
-        if(oldBlot is not None):
-            self.UpdateGrid(oldBlot.x, oldBlot.y, cfg.EMPTY_POINT)
+
+        # If the old blot is active, remove it from the grid
+        if(oldBlot.status == cfg.BLOT_ACTIVE):
+
+            # self.RemoveWidget(oldBlot.GetCircle())
+            pass
 
         # Create a new blot, add it to blots and update the grid
         newBlot = Blot()
+        newBlot.activate()
         self.blots[newBlotIndex] = newBlot
-        self.UpdateGrid(newBlot.x, newBlot.y, newBlot.printChar)
+        # self.AddWidget(newBlot.GetCircle())
+        print('Adding %s, %s, %s' % (newBlot.x, newBlot.y, newBlot.size))
+        self.AddWidget(Line(circle=(newBlot.x, newBlot.y, newBlot.size)))
         self.blotCounter += 1
 
         for blot in self.blots:
             # Deactivate blot if it's time is up
-            if(blot is None or blot.status is not cfg.BLOT_ACTIVE):
+            if blot is None or blot.status is not cfg.BLOT_ACTIVE:
                 continue
 
-            elif(blot.timer < 0):
-                self.UpdateGrid(blot.x, blot.y, cfg.EMPTY_POINT)
+            elif blot.timer < 0:
+                # self.RemoveWidget(blot.GetCircle())
                 blot.status = cfg.BLOT_INACTIVE
                 continue
 
