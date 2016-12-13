@@ -1,3 +1,4 @@
+from __future__ import division
 import logging
 import modules.Config as cfg
 from kivy.uix.button import Button
@@ -12,7 +13,6 @@ class Plr:
         self.y = 0 - num - 1
         self.status = cfg.PLR_WAITING
         self.printChar = cfg.PLR_POINT
-        # self.button = Button(text='%s' % (self.num), size_hint_x=None, width=cfg.BLOCK_SIZE, font_size=6, background_color=[0,0,1,1])
         self.button = Button()
 
         info = self.PrintPlr()

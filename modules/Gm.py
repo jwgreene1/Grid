@@ -132,7 +132,7 @@ class GmApp(App):
                 plr.status = cfg.PLR_DONE
                 self.plrsMadeIt += 1
 
-            elif plr.x == 0 :
+            elif plr.x == 0:
                 plr.status = cfg.PLR_GOING
 
             if plr.status == cfg.PLR_GOING:
@@ -198,6 +198,11 @@ class GmApp(App):
                             print('Blot      : %s' % blot.PrintBlot())
                             continue
 
+    def AddBlot(self, blot):
+        with self.layout.canvas:
+            Line(circle=(blot.x, blot.y, blot.size))
+            # blot.GetCircle()
+
     def UpdateBlots(self):
 
         # Get the new blot index
@@ -218,7 +223,7 @@ class GmApp(App):
         self.blots[newBlotIndex] = newBlot
         # self.AddWidget(newBlot.GetCircle())
         print('Adding %s, %s, %s' % (newBlot.x, newBlot.y, newBlot.size))
-        self.AddWidget(Line(circle=(newBlot.x, newBlot.y, newBlot.size)))
+        self.AddBlot(newBlot)
         self.blotCounter += 1
 
         for blot in self.blots:
