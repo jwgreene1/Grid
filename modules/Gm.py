@@ -31,12 +31,10 @@ class Gm:
 
         print("Calling run")
         self.GmApp.run()
+        self.GmApp.GetStats()
+        self.GmApp.PrintStats()
 
         print('Done!')
-
-#        self.GetStats()
-#        self.PrintStats()
-
 
 class GmApp(App):
     #kivy's run calls build.
@@ -95,13 +93,12 @@ class GmApp(App):
         self.layout.do_layout()
 
     def ply(self, whoAmI):
-        print(whoAmI)
-        done = 0
+        # print(whoAmI)
+        # done = 0
         counter = 1
 
         print('Begin ply')
 
-        # print('\nTIME: %d' % counter)
         counter += 1
         self.AdvancePlrs()
 
@@ -109,7 +106,7 @@ class GmApp(App):
             Clock.unschedule(self.ply)
 
         self.UpdateBlots()
-#            self.CheckForHits()
+        self.CheckForHits()
 
     def AdvancePlrs(self):
 
@@ -182,16 +179,23 @@ class GmApp(App):
         self.avgPos = self.totalPos / len(self.plrs)
 
     def CheckForHits(self):
+        print('Checking for hits')
         for plr in self.plrs:
-            if(plr.status is not cfg.PLR_GOING):
+            print('Checking player %s' % plr.num)
+            if(plr.status != cfg.PLR_GOING):
+                print('Player is not going, skipping')
                 continue
             else:
+                print('Checking blots')
                 for blot in self.blots:
-                    if(blot is not None and blot.status is cfg.BLOT_ACTIVE):
+                    if(blot.status == cfg.BLOT_ACTIVE):
+
                         distance = Util.Distance(plr, blot)
+                        print('distance = %s' % distance)
+
                         if(distance < blot.size):
                             plr.status = cfg.PLR_HIT
-                            self.AddWidget(plr.x, plr.y, cfg.EMPTY_POINT)
+                            self.RemoveWidget(plr.getButton())
                             self.plrsHit += 1
                             print('Distance  : %s' % distance)
                             print('Player Hit: %s' % plr.PrintPlr())
@@ -201,7 +205,11 @@ class GmApp(App):
     def AddBlot(self, blot):
         with self.layout.canvas:
             Line(circle=(blot.x, blot.y, blot.size))
-            # blot.GetCircle()
+
+    def RemoveBlot(self, blot):
+        with self.layout.canvas.remove():
+            print('Removing %s, %s' % blot.x, blot.y)
+            Line(circle=(blot.x, blot.y, blot.size))
 
     def UpdateBlots(self):
 
@@ -214,26 +222,29 @@ class GmApp(App):
         # If the old blot is active, remove it from the grid
         if(oldBlot.status == cfg.BLOT_ACTIVE):
 
-            # self.RemoveWidget(oldBlot.GetCircle())
+            print('Removing the old blot')
+            self.RemoveWidget(oldBlot.GetCircle())
             pass
 
         # Create a new blot, add it to blots and update the grid
         newBlot = Blot()
         newBlot.activate()
         self.blots[newBlotIndex] = newBlot
-        # self.AddWidget(newBlot.GetCircle())
-        print('Adding %s, %s, %s' % (newBlot.x, newBlot.y, newBlot.size))
-        self.AddBlot(newBlot)
+        self.AddWidget(newBlot.GetCircle())
+        print('Added %s, %s, %s' % (newBlot.x, newBlot.y, newBlot.size))
         self.blotCounter += 1
 
         for blot in self.blots:
-            # Deactivate blot if it's time is up
-            if blot is None or blot.status is not cfg.BLOT_ACTIVE:
+            # Skip blot if it's not active
+            if blot.status != cfg.BLOT_ACTIVE:
                 continue
 
-            elif blot.timer < 0:
-                # self.RemoveWidget(blot.GetCircle())
+            # Remove blot if it's timer is up
+            if blot.timer < 0:
+                print('Timer up, removing blot')
+                self.RemoveWidget(blot.GetCircle())
+                # self.RemoveBlot(blot)
                 blot.status = cfg.BLOT_INACTIVE
                 continue
 
-            blot.timer -= 1
+            blot.timer = blot.timer - 1
